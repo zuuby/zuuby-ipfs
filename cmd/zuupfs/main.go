@@ -23,6 +23,9 @@ func main() {
   wp := client.New(stop, 5)
   rc := wp.Start()
 
+  svr := server.NewHttpServer(httpPort, rc)
+	svr.Serve()
+
   res := make(chan string)
 
   // rc <- &request.Request{
@@ -42,6 +45,7 @@ func main() {
   }
 
   defer func() {
+    svr.Stop()    // close the api endpoints
     dmn.Stop()    // will signal the workers
     wp.WaitDone() // wait for workers to stop
   }()
