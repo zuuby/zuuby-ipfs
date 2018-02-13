@@ -7,10 +7,10 @@ import (
     "syscall"
     "time"
 
-    "github.com/zuuby/zuuby-ipfs/core/broadcast"
+    "github.com/zuuby/zuuby-ipfs/core/comm"
 )
 
-type SenderSignalChan broadcast.SenderSignalChan
+type SignalChan comm.SignalChan
 
 type Daemon struct {
   cmd *exec.Cmd
@@ -22,10 +22,9 @@ func New() Daemon {
   }
 }
 
-// NOTE: ReceiverSignalChan is a read-only chan and SenderSignalChan is read/write
-// HACK: compiler won't allow return type written as broadcast.ReceiverSignalChan
+// HACK: Return a read-only signal broadcast channel. 
 func (d Daemon) Start() (<-chan struct{}, error) {
-  stopChan := make(SenderSignalChan, 0)
+  stopChan := comm.NewSignal()
 
   fmt.Println("[daemon] Starting the ipfs daemon")
 
