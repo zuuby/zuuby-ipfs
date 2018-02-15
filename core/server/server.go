@@ -2,6 +2,7 @@ package server
 
 import (
 	"io"
+  "io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -41,12 +42,20 @@ func (s *Server) Serve() {
 
 func (s *Server) HandleGet(w http.ResponseWriter, r *http.Request) {
   s.Logger.Printf("%v", *r)
-  if r.Method != "GET" || r.Method != "" {
+  if r.Method != "GET" {
     BadRequestError(w)
     return
   }
 
-  req := NewGetReq([]byte(""))
+  hash := r.Url.Query().Get("hash")
+
+  if hash == "" {
+    s.Logger.Printf("[server] Hash parameter missing.")
+    BadRequestError(w)
+    return
+  }
+
+  req := NewGetReq([]byte(hash))
   s.requestChan <- req
 
   res := <-req.Res
@@ -62,7 +71,13 @@ func (s *Server) HandlePut(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  req := NewPutReq([]byte("Some string data"))
+  body, err := ioutil.ReadAll(r.Body)
+  if err != nil {
+    ServerError(w)
+    return
+  }
+
+  req := NewPutReq([]byte(body))
   s.requestChan <- req
 
   res := req.Res
