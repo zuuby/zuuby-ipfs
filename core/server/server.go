@@ -34,10 +34,11 @@ func NewHttpServer(httpPort string, rc comm.RequestChan) *Server {
 }
 
 func (s *Server) Serve() {
-
-	listenString := s.ListenHost + ":" + s.ListenPort
-	s.Logger.Println("Serving http://" + listenString)
-	s.Logger.Fatal(http.ListenAndServe(listenString, nil))
+  listenString := s.ListenHost + ":" + s.ListenPort
+	s.Logger.Println("[server] Serving http://" + listenString)
+  go func () {
+    s.Logger.Fatal(http.ListenAndServe(listenString, nil))
+  }()
 }
 
 func (s *Server) HandleGet(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +48,7 @@ func (s *Server) HandleGet(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  hash := r.Url.Query().Get("hash")
+  hash := r.URL.Query().Get("hash")
 
   if hash == "" {
     s.Logger.Printf("[server] Hash parameter missing.")
@@ -55,7 +56,7 @@ func (s *Server) HandleGet(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  req := NewGetReq([]byte(hash))
+  req := comm.NewGetReq([]byte(hash))
   s.requestChan <- req
 
   res := <-req.Res
@@ -66,7 +67,7 @@ func (s *Server) HandleGet(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) HandlePut(w http.ResponseWriter, r *http.Request) {
   s.Logger.Printf("%v", *r)
-  if r.Method != "PUT" {
+  if r.Method != "POST" {
     BadRequestError(w)
     return
   }
@@ -77,10 +78,10 @@ func (s *Server) HandlePut(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  req := NewPutReq([]byte(body))
+  req := comm.NewPutReq([]byte(body))
   s.requestChan <- req
 
-  res := req.Res
+  res := <-req.Res
 
 	s.httpHeaders(w)
 	Success(w, res)
@@ -92,21 +93,21 @@ func (s *Server) httpHeaders(w http.ResponseWriter) {
 }
 
 func Success(w http.ResponseWriter, res *comm.Response) {
-  data, _ = json.Marshal(res)
-  io.WriteString(w, data)
+  data, _ := json.Marshal(res)
+  io.WriteString(w, string(data))
 }
 
 func BadRequestError(w http.ResponseWriter) {
-  data, _ = json.Marshal(comm.NewBadRequest())
-  io.WriteString(w, data)
+  data, _ := json.Marshal(comm.NewBadRequest())
+  io.WriteString(w, string(data))
 }
 
 func NotFoundError(w http.ResponseWriter) {
-  data, _ = json.Marshal(comm.NewNotFound())
-  io.WriteString(w, data)
+  data, _ := json.Marshal(comm.NewNotFound())
+  io.WriteString(w, string(data))
 }
 
 func ServerError(w http.ResponseWriter) {
-  data, _ = json.Marshal(comm.NewServerError())
-  io.WriteString(w, data)
+  data, _ := json.Marshal(comm.NewServerError())
+  io.WriteString(w, string(data))
 }

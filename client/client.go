@@ -8,7 +8,6 @@ import (
 )
 
 type RequestPtr *comm.Request
-type RequestChan comm.RequestChan
 type ResponsePtr *comm.Response
 type ReadOnlySignalChan comm.ReadOnlySignalChan
 type WorkerDoneChan chan bool
@@ -27,11 +26,11 @@ func New(stopChan ReadOnlySignalChan, n int) WorkerPool {
   }
 }
 
-func (w WorkerPool) Start() RequestChan {
+func (w WorkerPool) Start() comm.RequestChan {
   fmt.Printf("[worker] Starting a pool of %d workers\n", w.Size)
 
   // TODO: I don't actually know what to make the RequestChan capacity
-  rqch := make(RequestChan, w.Size * w.Size)
+  rqch := make(comm.RequestChan, w.Size * w.Size)
 
   for i := 0; i < w.Size; i++ { // spawn n workers
     go func () {

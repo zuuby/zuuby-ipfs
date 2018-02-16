@@ -16,9 +16,9 @@ const NOT_FOUND_MSG = "Not Found"
 const SERVER_MSG = "Internal Server Error"
 
 type Response struct {
-  Msg StatusMsg   `json:message`
-  Code StatusCode `json:code`
-  Payload []byte  `json:data`
+  Msg StatusMsg   `json:"message"`
+  Code StatusCode `json:"code"`
+  Payload []byte  `json:"data"`
 }
 
 type ResponseChan chan *Response
