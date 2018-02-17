@@ -34,7 +34,7 @@ func NewHttpServer(httpPort string, rc comm.RequestChan) *Server {
 }
 
 func (s *Server) Serve() {
-	listenString := s.ListenHost + ":" + s.ListenPort
+	listenString := ":" + s.ListenPort
 	s.Logger.Println("[server] Serving http://" + listenString)
 	go func() {
 		s.Logger.Fatal(http.ListenAndServe(listenString, nil))

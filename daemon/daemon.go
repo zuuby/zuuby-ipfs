@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"syscall"
 	"time"
+	"bytes"
 
 	"github.com/zuuby/zuuby-ipfs/core/comm"
 )
@@ -18,7 +19,7 @@ type Daemon struct {
 
 func New() Daemon {
 	return Daemon{
-		cmd: exec.Command("/usr/local/bin/ipfs", "daemon"),
+		cmd: exec.Command("ipfs", "daemon"),//exec.Command("sh", "-c", "ipfs daemon"),
 	}
 }
 
@@ -28,6 +29,8 @@ func (d Daemon) Start() (<-chan struct{}, error) {
 
 	fmt.Println("[daemon] Starting the ipfs daemon")
 
+	var stdout bytes.Buffer
+	d.cmd.Stdout = &stdout
 	err := d.cmd.Start()
 	if err != nil {
 		fmt.Printf("[daemon] Daemon failed to start with error: %v\n", err)
@@ -35,13 +38,14 @@ func (d Daemon) Start() (<-chan struct{}, error) {
 	}
 
 	// started successfully
-	go func() {
+	go func(out bytes.Buffer) {
 		if err := d.cmd.Wait(); err != nil {
 			fmt.Printf("[daemon] The ipfs daemon exitted with error %v.\n", err)
+			fmt.Printf("[daemon] %s\n", out.String())
 		}
 		fmt.Println("[daemon] The ipfs daemon has stopped. Broadcasting stop signal.")
 		close(stopChan)
-	}()
+	} (stdout)
 
 	return stopChan, nil
 }
@@ -71,12 +75,19 @@ func (d Daemon) Stop() error {
 func (d Daemon) WaitReady() error {
 	timeouts := 0
 	for {
+		// cmd.ProcessState is non-nil when cmd.Wait() has been called
+		// If that is the case, we should check that it hasn't already stopped
+		if d.cmd.ProcessState != nil && d.cmd.ProcessState.Exited() {
+			fmt.Println("[daemon] Daemon process already exited.")
+			return nil
+		}
+
 		timeouts += 1
-		if timeouts > 10 {
+		if timeouts > 25 {
 			fmt.Println("[daemon] Daemon timeout.")
 			return errors.New("daemon: Too many timeouts. Daemon not ready.")
 		}
-		cmd := exec.Command("/usr/local/bin/ipfs", "cat", "/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG/readme")
+		cmd := exec.Command("ipfs", "cat", "/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG/readme")
 		_, err := cmd.Output()
 		if err != nil {
 			fmt.Println("[daemon] Daemon not ready yet ...")
