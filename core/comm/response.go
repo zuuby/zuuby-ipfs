@@ -16,41 +16,41 @@ const NOT_FOUND_MSG = "Not Found"
 const SERVER_MSG = "Internal Server Error"
 
 type Response struct {
-  Msg StatusMsg   `json:"message"`
-  Code StatusCode `json:"code"`
-  Payload []byte  `json:"data"`
+	Msg     StatusMsg  `json:"message"`
+	Code    StatusCode `json:"code"`
+	Payload []byte     `json:"data"`
 }
 
 type ResponseChan chan *Response
 
 func NewSuccess(payload []byte) *Response {
-  return &Response {
-    Msg:      SUCCESS_MSG,
-    Code:     SUCCESS_CODE,
-    Payload:  payload,
-  }
+	return &Response{
+		Msg:     SUCCESS_MSG,
+		Code:    SUCCESS_CODE,
+		Payload: payload,
+	}
 }
 
 func NewBadRequest() *Response {
-  return &Response{
-    Msg:      BAD_REQUEST_MSG,
-    Code:     CLIENT_ERROR,
-    Payload:  make([]byte, 0),
-  }
+	return &Response{
+		Msg:     BAD_REQUEST_MSG,
+		Code:    CLIENT_ERROR,
+		Payload: make([]byte, 0),
+	}
 }
 
 func NewNotFound() *Response {
-  return &Response{
-    Msg:      NOT_FOUND_MSG,
-    Code:     CLIENT_ERROR,
-    Payload:  make([]byte, 0),
-  }
+	return &Response{
+		Msg:     NOT_FOUND_MSG,
+		Code:    CLIENT_ERROR,
+		Payload: make([]byte, 0),
+	}
 }
 
 func NewServerError() *Response {
-  return &Response{
-    Msg:      SERVER_MSG,
-    Code:     SERVER_ERROR,
-    Payload:  make([]byte, 0),
-  }
+	return &Response{
+		Msg:     SERVER_MSG,
+		Code:    SERVER_ERROR,
+		Payload: make([]byte, 0),
+	}
 }

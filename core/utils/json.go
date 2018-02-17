@@ -1,14 +1,14 @@
 package utils
 
 import (
-  "encoding/json"
+	"encoding/json"
 )
 
 func StructToJSON(s *struct{}) {
-  data, _ = json.Marshal(s)
-  return string(data)
+	data, _ = json.Marshal(s)
+	return string(data)
 }
 
 func JSONToStruct(data []byte, s *struct{}) {
-  json.UnMarshal(data, s)
+	json.UnMarshal(data, s)
 }
