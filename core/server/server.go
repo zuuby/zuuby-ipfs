@@ -7,9 +7,12 @@ import (
 	"net/http"
 	"os"
   "encoding/json"
+  "time"
 
 	"github.com/zuuby/zuuby-ipfs/core/comm"
 )
+
+const TIMEOUT_AFTER time.Duration = 10
 
 type Server struct {
 	ListenHost  string
@@ -84,10 +87,13 @@ func (s *Server) HandleGet(w http.ResponseWriter, r *http.Request) {
 	req := comm.NewGetReq([]byte(hash))
 	s.requestChan <- req
 
-	res := <-req.Res // wait for response
-	//TODO: timeout, this hangs all day
-
-	HandleResponse(w, res)
+  select {
+    case res := <-req.Res: // wait for response
+      HandleResponse(w, res)
+    case <-time.After(TIMEOUT_AFTER * time.Second):
+      fmt.Println("[server] Client timeout. Failing request")
+      ServerError(w)
+  }
 }
 
 func (s *Server) HandlePut(w http.ResponseWriter, r *http.Request) {
@@ -106,10 +112,13 @@ func (s *Server) HandlePut(w http.ResponseWriter, r *http.Request) {
 	req := comm.NewPutReq([]byte(body))
 	s.requestChan <- req
 
-	res := <-req.Res // wait for response
-	//TODO: timeout, this hangs all day
-
-	HandleResponse(w, res)
+  select {
+    case res := <-req.Res: // wait for response
+      HandleResponse(w, res)
+    case <-time.After(TIMEOUT_AFTER * time.Second):
+      fmt.Println("[server] Client timeout. Failing request")
+      ServerError(w)
+  }
 }
 
 func HandleResponse(w http.ResponseWriter, res *comm.Response) {
