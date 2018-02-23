@@ -12,28 +12,28 @@ import (
 	"github.com/zuuby/zuuby-ipfs/core/comm"
 )
 
-const TIMEOUT_AFTER time.Duration = 10
+const timeout_after time.Duration = 10
 
 type Server struct {
 	ListenHost  string
 	ListenPort  string
-	Logger      *log.Logger
-	requestChan comm.RequestChan
+	Logger      *log.Logger // TODO remove this
+	requestChan chan *comm.Request
 }
 
-func NewHttpServer(httpPort string, rc comm.RequestChan) *Server {
+func NewHttpServer(httpPort string, rc chan *comm.Request) *Server {
 
-	res := Server{
+	svr := Server{
 		ListenHost:  "localhost",
 		ListenPort:  httpPort,
 		Logger:      log.New(os.Stdout, "server> ", log.Ltime|log.Lshortfile),
 		requestChan: rc,
 	}
 
-	http.HandleFunc("/", res.HandleIndex)
-	http.HandleFunc("/api/file", res.HandleApi)
+	http.HandleFunc("/", svr.handleIndex)
+	http.HandleFunc("/api/file", svr.handleApi)
 
-	return &res
+	return &svr
 }
 
 func (s *Server) Serve() {
@@ -44,35 +44,35 @@ func (s *Server) Serve() {
 	}()
 }
 
-func (s *Server) HandleIndex(w http.ResponseWriter, r *http.Request) {
-	BadRequestError(w)
+func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
+	badRequestError(w)
 }
 
-func (s *Server) HandleApi(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleApi(w http.ResponseWriter, r *http.Request) {
 
 	s.Logger.Printf("%v", *r)
-	SetHttpHeaders(w)
+	setHttpHeaders(w)
 
 	if r.Method == "GET" {
-		s.HandleGet(w, r)
+		s.handleGet(w, r)
 	} else if r.Method == "PUT" || r.Method == "POST" {
-		s.HandlePut(w, r)
+		s.handlePut(w, r)
 	} else if r.Method == "DELETE" {
 
 		fmt.Println("[server] DELETE Method not handled yet.")
-		BadRequestError(w)
-		//TODO: HandleDelete(w, r)
+		badRequestError(w)
+		//TODO: s.handleDelete(w, r)
 	} else {
 
 		fmt.Printf("[server] Unknown method %s.", r.Method)
-		BadRequestError(w)
+		badRequestError(w)
 	}
 }
 
-func (s *Server) HandleGet(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleGet(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != "GET" {
-		BadRequestError(w)
+		badRequestError(w)
 		return
 	}
 
@@ -80,7 +80,7 @@ func (s *Server) HandleGet(w http.ResponseWriter, r *http.Request) {
 
 	if hash == "" {
 		s.Logger.Printf("[server] Hash parameter missing.")
-		BadRequestError(w)
+		badRequestError(w)
 		return
 	}
 
@@ -89,23 +89,23 @@ func (s *Server) HandleGet(w http.ResponseWriter, r *http.Request) {
 
 	select {
 	case res := <-req.Res: // wait for response
-		HandleResponse(w, res)
-	case <-time.After(TIMEOUT_AFTER * time.Second):
+		handleResponse(w, res)
+	case <-time.After(timeout_after * time.Second):
 		fmt.Println("[server] Client timeout. Failing request")
-		ServerError(w)
+		serverError(w)
 	}
 }
 
-func (s *Server) HandlePut(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handlePut(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != "POST" {
-		BadRequestError(w)
+		badRequestError(w)
 		return
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		ServerError(w)
+		serverError(w)
 		return
 	}
 
@@ -114,33 +114,33 @@ func (s *Server) HandlePut(w http.ResponseWriter, r *http.Request) {
 
 	select {
 	case res := <-req.Res: // wait for response
-		HandleResponse(w, res)
-	case <-time.After(TIMEOUT_AFTER * time.Second):
+		handleResponse(w, res)
+	case <-time.After(timeout_after * time.Second):
 		fmt.Println("[server] Client timeout. Failing request")
-		ServerError(w)
+		serverError(w)
 	}
 }
 
-func HandleResponse(w http.ResponseWriter, res *comm.Response) {
+func handleResponse(w http.ResponseWriter, res *comm.Response) {
 	w.WriteHeader(int(res.Code))
 	data, _ := json.Marshal(res)
 	fmt.Fprintln(w, string(data))
 }
 
-func SetHttpHeaders(w http.ResponseWriter) {
+func setHttpHeaders(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 }
 
-func BadRequestError(w http.ResponseWriter) {
-	http.Error(w, comm.BAD_REQUEST_MSG, int(comm.CLIENT_ERROR))
+func badRequestError(w http.ResponseWriter) {
+	http.Error(w, comm.BadRequestMsg, int(comm.ClientError))
 }
 
-func NotFoundError(w http.ResponseWriter) {
-	http.Error(w, comm.NOT_FOUND_MSG, int(comm.CLIENT_ERROR))
+func notFoundError(w http.ResponseWriter) {
+	http.Error(w, comm.NotFoundMsg, int(comm.ClientError))
 }
 
-func ServerError(w http.ResponseWriter) {
-	http.Error(w, comm.SERVER_MSG, int(comm.SERVER_ERROR))
+func serverError(w http.ResponseWriter) {
+	http.Error(w, comm.ServerMsg, int(comm.ServerError))
 }

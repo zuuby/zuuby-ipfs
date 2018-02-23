@@ -1,39 +1,42 @@
 package comm
 
-type CRUDVerb int
+type verb int
 
-const GET CRUDVerb = 0
-const PUT CRUDVerb = 1
-const DELETE CRUDVerb = 2
+const Get verb = 0
+const Put verb = 1
+const Delete verb = 2
 
 type Push struct {
-	Verb    CRUDVerb
+	Verb    verb
 	Payload []byte
 }
 
-type PushChan chan *Push
-
-func NewPush(v CRUDVerb, pl []byte) *Push {
+func NewPush(v verb, pl []byte) *Push {
 	return &Push{v, pl}
 }
 
 type Request struct {
 	*Push
-	Res ResponseChan
+	Res chan *Response
 }
-
-type RequestChan chan *Request
 
 func NewGetReq(payload []byte) *Request {
 	return &Request{
-		NewPush(GET, payload),
-		make(ResponseChan, 1),
+		NewPush(Get, payload),
+		make(chan *Response, 1),
 	}
 }
 
 func NewPutReq(payload []byte) *Request {
 	return &Request{
-		NewPush(PUT, payload),
-		make(ResponseChan, 1),
+		NewPush(Put, payload),
+		make(chan *Response, 1),
+	}
+}
+
+func NewDeleteReq(payload []byte) *Request {
+	return &Request{
+		NewPush(Delete, payload),
+		make(chan *Response, 1),
 	}
 }

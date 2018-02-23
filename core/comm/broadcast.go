@@ -1,12 +1,18 @@
 package comm
 
 type SignalChan chan struct{}
+
+func (sc SignalChan) Signal() {
+	close(sc)
+}
+
 type ReadOnlySignalChan <-chan struct{}
 
-type BroadcastChan chan interface{}
-type ReadOnlyBroadcastChan <-chan interface{}
+// TODO: implement general broadcast channel
+// type BroadcastChan chan interface{}
+// type ReadOnlyBroadcastChan <-chan interface{}
 
-func NewSignal() SignalChan {
+func NewSignalChan() SignalChan {
 	return make(SignalChan, 0)
 }
 

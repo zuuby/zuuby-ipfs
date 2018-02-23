@@ -11,7 +11,7 @@ import (
 	"github.com/zuuby/zuuby-ipfs/core/server"
 )
 
-const PORT = "5000"
+const port = "5000"
 
 func main() {
 	fmt.Println("Starting the zuupfs daemon")
@@ -26,12 +26,12 @@ func main() {
 	wp := client.New(stop, 5)
 	rc := wp.Start()
 
-	// create a server and
-	svr := server.NewHttpServer(PORT, rc)
+	// create a server
+	svr := server.NewHttpServer(port, rc)
 	svr.Serve()
 
 	defer func() {
-		//svr.Stop()    // close the api endpoints
+		//svr.Stop()    // TODO close the api endpoints
 		dmn.Stop()    // will signal the workers
 		wp.WaitDone() // wait for workers to stop
 	}()

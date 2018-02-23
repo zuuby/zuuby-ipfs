@@ -11,21 +11,19 @@ import (
 	"github.com/zuuby/zuuby-ipfs/core/comm"
 )
 
-type SignalChan comm.SignalChan
-
 type Daemon struct {
 	cmd *exec.Cmd
 }
 
 func New() Daemon {
 	return Daemon{
-		cmd: exec.Command("ipfs", "daemon"), //exec.Command("sh", "-c", "ipfs daemon"),
+		cmd: exec.Command("ipfs", "daemon"),
 	}
 }
 
 // HACK: Return a read-only signal broadcast channel.
 func (d Daemon) Start() (<-chan struct{}, error) {
-	stopChan := comm.NewSignal()
+	stopSignal := comm.NewSignalChan()
 
 	fmt.Println("[daemon] Starting the ipfs daemon")
 
@@ -44,10 +42,10 @@ func (d Daemon) Start() (<-chan struct{}, error) {
 			fmt.Printf("[daemon] %s\n", out.String())
 		}
 		fmt.Println("[daemon] The ipfs daemon has stopped. Broadcasting stop signal.")
-		close(stopChan)
+		stopSignal.Signal()
 	}(stdout)
 
-	return stopChan, nil
+	return stopSignal, nil
 }
 
 func (d Daemon) Stop() error {

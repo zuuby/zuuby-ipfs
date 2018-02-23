@@ -7,18 +7,13 @@ import (
 	"github.com/zuuby/zuuby-ipfs/core/comm"
 )
 
-type RequestPtr *comm.Request
-type ResponsePtr *comm.Response
-type ReadOnlySignalChan comm.ReadOnlySignalChan
-type WorkerDoneChan chan bool
-
 type WorkerPool struct {
-	Size int                // num workers
-	stop ReadOnlySignalChan // stop signal from daemon
-	done WorkerDoneChan     // channel for workers to signal their shutdown
+	Size int
+	stop comm.ReadOnlySignalChan
+	done chan bool
 }
 
-func New(stopChan ReadOnlySignalChan, n int) WorkerPool {
+func New(stopChan comm.ReadOnlySignalChan, n int) WorkerPool {
 	return WorkerPool{
 		Size: n,
 		stop: stopChan,
@@ -26,11 +21,11 @@ func New(stopChan ReadOnlySignalChan, n int) WorkerPool {
 	}
 }
 
-func (w WorkerPool) Start() comm.RequestChan {
+func (w WorkerPool) Start() chan *comm.Request {
 	fmt.Printf("[worker] Starting a pool of %d workers\n", w.Size)
 
 	// TODO: I don't actually know what to make the RequestChan capacity
-	rqch := make(comm.RequestChan, w.Size*w.Size)
+	rqch := make(chan *comm.Request, w.Size*w.Size)
 
 	for i := 0; i < w.Size; i++ { // spawn n workers
 		go func() {
@@ -57,12 +52,12 @@ func (w WorkerPool) WaitDone() {
 	}
 }
 
-func process(r RequestPtr) {
-	var res ResponsePtr
+func process(r *comm.Request) {
+	var res *comm.Response
 	switch r.Verb {
-	case comm.GET:
+	case comm.Get:
 		res = get(r.Payload)
-	case comm.PUT:
+	case comm.Put:
 		res = put(r.Payload)
 	default:
 		fmt.Printf("[worker] Unknown request verb: %v\n", r.Verb)
@@ -72,7 +67,7 @@ func process(r RequestPtr) {
 	r.Res <- res
 }
 
-func get(hash []byte) ResponsePtr {
+func get(hash []byte) *comm.Response {
 	cmd := exec.Command("sh", "-c", "ipfs cat "+string(hash))
 	out, err := cmd.Output()
 
@@ -81,12 +76,11 @@ func get(hash []byte) ResponsePtr {
 		return comm.NewServerError()
 	}
 
-	// TODO: must return the returned object
 	fmt.Printf("[worker] %s", string(out))
 	return comm.NewSuccess(out)
 }
 
-func put(contents []byte) ResponsePtr {
+func put(contents []byte) *comm.Response {
 	strcmd := fmt.Sprintf("echo \"%s\" | ipfs add -Q", string(contents))
 	out, err := exec.Command("sh", "-c", strcmd).Output()
 
@@ -95,7 +89,7 @@ func put(contents []byte) ResponsePtr {
 		return comm.NewServerError()
 	}
 
-	// TODO: must return hash somehow and schedule it for pinning
+	// TODO: must schedule hash for pinning
 	fmt.Printf("[worker] %s", string(out))
 	return comm.NewSuccess(out)
 }
