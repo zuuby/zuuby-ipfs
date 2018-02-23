@@ -1,13 +1,13 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-  "encoding/json"
-  "time"
+	"time"
 
 	"github.com/zuuby/zuuby-ipfs/core/comm"
 )
@@ -87,13 +87,13 @@ func (s *Server) HandleGet(w http.ResponseWriter, r *http.Request) {
 	req := comm.NewGetReq([]byte(hash))
 	s.requestChan <- req
 
-  select {
-    case res := <-req.Res: // wait for response
-      HandleResponse(w, res)
-    case <-time.After(TIMEOUT_AFTER * time.Second):
-      fmt.Println("[server] Client timeout. Failing request")
-      ServerError(w)
-  }
+	select {
+	case res := <-req.Res: // wait for response
+		HandleResponse(w, res)
+	case <-time.After(TIMEOUT_AFTER * time.Second):
+		fmt.Println("[server] Client timeout. Failing request")
+		ServerError(w)
+	}
 }
 
 func (s *Server) HandlePut(w http.ResponseWriter, r *http.Request) {
@@ -112,13 +112,13 @@ func (s *Server) HandlePut(w http.ResponseWriter, r *http.Request) {
 	req := comm.NewPutReq([]byte(body))
 	s.requestChan <- req
 
-  select {
-    case res := <-req.Res: // wait for response
-      HandleResponse(w, res)
-    case <-time.After(TIMEOUT_AFTER * time.Second):
-      fmt.Println("[server] Client timeout. Failing request")
-      ServerError(w)
-  }
+	select {
+	case res := <-req.Res: // wait for response
+		HandleResponse(w, res)
+	case <-time.After(TIMEOUT_AFTER * time.Second):
+		fmt.Println("[server] Client timeout. Failing request")
+		ServerError(w)
+	}
 }
 
 func HandleResponse(w http.ResponseWriter, res *comm.Response) {

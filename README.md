@@ -5,5 +5,5 @@ Persistent storage implementation using IPFS
 A sample Docker run command is provided as an bash script
 
 ```bash
-./cmd/cli/docker_run
+$ ./cmd/cli/docker_run
 ```

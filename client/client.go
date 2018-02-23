@@ -73,7 +73,7 @@ func process(r RequestPtr) {
 }
 
 func get(hash []byte) ResponsePtr {
-	cmd := exec.Command("sh", "-c", "ipfs cat " + string(hash))
+	cmd := exec.Command("sh", "-c", "ipfs cat "+string(hash))
 	out, err := cmd.Output()
 
 	if err != nil {

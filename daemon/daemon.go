@@ -1,12 +1,12 @@
 package daemon
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os/exec"
 	"syscall"
 	"time"
-	"bytes"
 
 	"github.com/zuuby/zuuby-ipfs/core/comm"
 )
@@ -19,7 +19,7 @@ type Daemon struct {
 
 func New() Daemon {
 	return Daemon{
-		cmd: exec.Command("ipfs", "daemon"),//exec.Command("sh", "-c", "ipfs daemon"),
+		cmd: exec.Command("ipfs", "daemon"), //exec.Command("sh", "-c", "ipfs daemon"),
 	}
 }
 
@@ -45,7 +45,7 @@ func (d Daemon) Start() (<-chan struct{}, error) {
 		}
 		fmt.Println("[daemon] The ipfs daemon has stopped. Broadcasting stop signal.")
 		close(stopChan)
-	} (stdout)
+	}(stdout)
 
 	return stopChan, nil
 }
