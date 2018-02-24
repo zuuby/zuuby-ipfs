@@ -1,3 +1,4 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/zuuby/zuuby-ipfs)](https://goreportcard.com/report/github.com/zuuby/zuuby-ipfs)
 # zuuby-ipfs
 Persistent storage implementation using IPFS
 
