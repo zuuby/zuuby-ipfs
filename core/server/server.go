@@ -10,14 +10,14 @@ import (
 	"time"
 
 	"github.com/zuuby/zuuby-ipfs/core/comm"
+	"github.com/zuuby/zuuby-ipfs/core/utils"
 )
 
-const timeout_after time.Duration = 10
+const timeoutAfter time.Duration = 10
 
 type Server struct {
 	ListenHost  string
 	ListenPort  string
-	Logger      *log.Logger // TODO remove this
 	requestChan chan *comm.Request
 }
 
@@ -26,7 +26,6 @@ func NewHttpServer(httpPort string, rc chan *comm.Request) *Server {
 	svr := Server{
 		ListenHost:  "localhost",
 		ListenPort:  httpPort,
-		Logger:      log.New(os.Stdout, "server> ", log.Ltime|log.Lshortfile),
 		requestChan: rc,
 	}
 
@@ -90,7 +89,7 @@ func (s *Server) handleGet(w http.ResponseWriter, r *http.Request) {
 	select {
 	case res := <-req.Res: // wait for response
 		handleResponse(w, res)
-	case <-time.After(timeout_after * time.Second):
+	case <-time.After(timeoutAfter * time.Second):
 		fmt.Println("[server] Client timeout. Failing request")
 		serverError(w)
 	}
@@ -115,7 +114,7 @@ func (s *Server) handlePut(w http.ResponseWriter, r *http.Request) {
 	select {
 	case res := <-req.Res: // wait for response
 		handleResponse(w, res)
-	case <-time.After(timeout_after * time.Second):
+	case <-time.After(timeoutAfter * time.Second):
 		fmt.Println("[server] Client timeout. Failing request")
 		serverError(w)
 	}
